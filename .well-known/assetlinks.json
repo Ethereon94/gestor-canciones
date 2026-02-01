@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.netlify.rainbow_praline_8ffe23.twa",
+      "sha256_cert_fingerprints": [
+        "E9:3A:68:F5:F4:01:06:EF:BC:40:70:C6:8C:30:88:0D:1B:AD:E9:11:FE:57:5A:97:26:E6:F2:DA:80:76:03:0E"
+      ]
+    }
+  }
+]

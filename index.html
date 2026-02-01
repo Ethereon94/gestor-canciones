@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gestor de Canciones</title>
+
+  <link rel="stylesheet" href="styles.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#4f8cff">
+</head>
+
+<body>
+
+<header class="app-header">
+  <h1>🎵 Gestor de Canciones</h1>
+</header>
+
+<main class="container">
+
+  <!-- AGREGAR -->
+  <section class="card">
+    <h2>Agregar canción</h2>
+    <input id="songName" placeholder="Nombre">
+    <input id="songKey" placeholder="Tonalidad (Ej: G, Am)">
+    <button onclick="addSong()">Agregar</button>
+  </section>
+
+  <!-- LISTA -->
+  <section class="card">
+    <h2>Lista de canciones</h2>
+    <input id="searchSong" placeholder="🔍 Buscar canción">
+    <ul id="songList" class="scroll"></ul>
+  </section>
+
+  <!-- SETLIST -->
+  <section class="card">
+    <h2>Setlist de hoy</h2>
+    <input type="date" id="setlistDate">
+    <ul id="setlist" class="scroll"></ul>
+
+    <div class="buttons">
+      <button onclick="saveSetlist()">💾 Guardar</button>
+      <button onclick="copySetlist()">📋 Copiar</button>
+      <button onclick="copySetlistWhatsApp()">📲 WhatsApp</button>
+      <button onclick="enterStageMode()">🎤 Modo canto</button>
+      <button onclick="clearSetlist()">🗑 Borrar setlist</button>
+    </div>
+  </section>
+
+  <!-- HISTORIAL -->
+  <section class="card">
+    <h2>Historial</h2>
+    <button onclick="clearHistory()">🗑 Borrar historial</button>
+    <ul id="historyList"></ul>
+  </section>
+
+</main>
+
+<!-- MODO CANTO -->
+<section id="stageMode" class="stage hidden">
+  <h2>🎶 Setlist</h2>
+  <ul id="stageSetlist"></ul>
+  <button onclick="exitStageMode()">⬅ Salir</button>
+</section>
+
+<!-- LETRAS -->
+<section id="lyricsView" class="stage hidden">
+  <button onclick="backToStage()">⬅ Volver</button>
+  <h2 id="lyricsTitle"></h2>
+  <p id="lyricsKey"></p>
+  <pre id="lyricsContent"></pre>
+</section>
+
+<!-- EDITOR -->
+<section id="songEditor" class="stage hidden">
+  <button onclick="closeSongEditor()">⬅ Volver</button>
+  <h2>Editar canción</h2>
+  <input id="editorName" placeholder="Nombre">
+  <input id="editorKeyInput" placeholder="Tonalidad">
+  <textarea id="editorLyrics" placeholder="Letra..."></textarea>
+  <button onclick="saveSongEdits()">💾 Guardar cambios</button>
+</section>
+
+<div id="toast-container"></div>
+
+<script src="app.js"></script>
+
+<!-- REGISTRO SERVICE WORKER (CLAVE PARA OFFLINE) -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./service-worker.js')
+      .then(reg => {
+        console.log('✅ Service Worker registrado:', reg.scope);
+      })
+      .catch(err => {
+        console.error('❌ Error registrando Service Worker:', err);
+      });
+  });
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,157 @@
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: #0f1115;
+  color: #eaeaea;
+}
+
+:root {
+  --bg-card: #161a22;
+  --bg-soft: #1e2330;
+  --accent: #4f8cff;
+  --border: #2a3142;
+  --text-soft: #9aa4b2;
+}
+
+.container {
+  max-width: 500px;
+  margin: auto;
+  padding: 14px;
+}
+
+.card {
+  background: var(--bg-card);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 14px;
+  transition: transform .2s;
+}
+
+.card:hover { transform: translateY(-2px); }
+
+h1, h2 { margin: 0 0 10px; }
+
+input, textarea {
+  width: 100%;
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+  color: #fff;
+  margin-bottom: 10px;
+}
+
+button {
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  color: #fff;
+  border-radius: 10px;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: transform .15s;
+}
+
+button:hover { transform: scale(1.05); }
+
+ul { list-style: none; padding: 0; margin: 0; }
+
+li {
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.scroll {
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+/* Scroll moderno */
+.scroll::-webkit-scrollbar { width: 6px; }
+.scroll::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,.3);
+  border-radius: 10px;
+}
+
+/* MODO CANTO */
+.stage {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  padding: 16px;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.hidden { display: none; }
+
+#lyricsContent {
+  white-space: pre-wrap;
+  line-height: 1.6;
+  font-size: 1.05rem;
+}
+
+#editorLyrics {
+  height: 60vh;
+  resize: none;
+}
+
+#toast-container {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.toast {
+  min-width: 220px;
+  max-width: 90vw;
+  padding: 12px 18px;
+  border-radius: 14px;
+  background: rgba(30, 30, 30, 0.95);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  transform: translateY(10px) scale(0.95);
+  animation: toast-in 0.3s ease forwards;
+}
+
+.toast.success {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+}
+
+.toast.error {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.toast.info {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+@keyframes toast-in {
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toast-out {
+  to {
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+  }
+}
