@@ -1,6 +1,6 @@
 {
   "name": "Gestor de Canciones",
-  "short_name": "Canciones",
+  "short_name": "Gestor",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f1115",

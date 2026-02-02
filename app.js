@@ -1,39 +1,21 @@
-// ===============================
-// SERVICE WORKER REGISTRATION
-// ===============================
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then(reg => console.log('✅ Service Worker registrado:', reg.scope))
-      .catch(err => console.error('❌ Error registrando Service Worker:', err));
-  });
-}
-
-// ===============================
-// DATA
-// ===============================
 let songs = JSON.parse(localStorage.getItem('songs')) || [];
 let history = JSON.parse(localStorage.getItem('history')) || [];
 let currentSetlist = [];
 let editingSongId = null;
 
-// ===============================
 // DOM
-// ===============================
 const songList = document.getElementById('songList');
 const setlist = document.getElementById('setlist');
 const historyList = document.getElementById('historyList');
-
 const songNameInput = document.getElementById('songName');
 const songKeyInput = document.getElementById('songKey');
 const searchSongInput = document.getElementById('searchSong');
-const setlistDateInput = document.getElementById('setlistDate');
 const sortMode = document.getElementById('sortMode');
 const filterKey = document.getElementById('filterKey');
+const setlistDateInput = document.getElementById('setlistDate');
 
 const stageMode = document.getElementById('stageMode');
 const stageSetlist = document.getElementById('stageSetlist');
-
 const lyricsView = document.getElementById('lyricsView');
 const lyricsTitle = document.getElementById('lyricsTitle');
 const lyricsKey = document.getElementById('lyricsKey');
@@ -44,23 +26,47 @@ const editorName = document.getElementById('editorName');
 const editorKeyInput = document.getElementById('editorKeyInput');
 const editorLyrics = document.getElementById('editorLyrics');
 
-// ===============================
 // INIT
-// ===============================
 setlistDateInput.value = new Date().toISOString().split('T')[0];
 renderSongs();
 renderHistory();
 searchSongInput.addEventListener('input', renderSongs);
 
-// ===============================
 // STORAGE
-// ===============================
 const saveSongs = () => localStorage.setItem('songs', JSON.stringify(songs));
 const saveHistory = () => localStorage.setItem('history', JSON.stringify(history));
 
-// ===============================
-// RENDER SONGS
-// ===============================
+// TOAST
+function showToast(msg, type = 'info') {
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2000);
+}
+
+// SONGS
+function addSong() {
+  const name = songNameInput.value.trim();
+  const key = songKeyInput.value.trim();
+
+  if (!name || !key) {
+    showToast('Completá los campos', 'error');
+    return;
+  }
+
+  if (songs.some(s => s.name.toLowerCase() === name.toLowerCase())) {
+    showToast('La canción ya existe', 'error');
+    return;
+  }
+
+  songs.push({ id: crypto.randomUUID(), name, key, lyrics: '' });
+  saveSongs();
+  renderSongs();
+  songNameInput.value = songKeyInput.value = '';
+  showToast('Canción agregada', 'success');
+}
+
 function renderSongs() {
   songList.innerHTML = '';
 
@@ -68,15 +74,12 @@ function renderSongs() {
     s.name.toLowerCase().includes(searchSongInput.value.toLowerCase())
   );
 
-  if (filterKey && filterKey.value) {
-    list = list.filter(s => s.key === filterKey.value);
-  }
+  if (filterKey.value) list = list.filter(s => s.key === filterKey.value);
 
-  if (sortMode && sortMode.value === 'key') {
-    list.sort((a, b) => a.key.localeCompare(b.key));
-  } else {
-    list.sort((a, b) => a.name.localeCompare(b.name));
-  }
+  list.sort(sortMode.value === 'key'
+    ? (a, b) => a.key.localeCompare(b.key)
+    : (a, b) => a.name.localeCompare(b.name)
+  );
 
   list.forEach(song => {
     songList.innerHTML += `
@@ -86,17 +89,55 @@ function renderSongs() {
           <small>${song.key}</small>
         </div>
         <div>
-          <button onclick="addToSetlistById('${song.id}')">➕</button>
-          <button onclick="editSongById('${song.id}')">✏️</button>
-          <button onclick="deleteSongById('${song.id}')">❌</button>
+          <button onclick="addToSetlist('${song.id}')">➕</button>
+          <button onclick="editSong('${song.id}')">✏️</button>
+          <button onclick="deleteSong('${song.id}')">❌</button>
         </div>
       </li>`;
   });
 }
 
-// ===============================
+function deleteSong(id) {
+  songs = songs.filter(s => s.id !== id);
+  saveSongs();
+  renderSongs();
+  showToast('Canción eliminada', 'info');
+}
+
+// EDIT
+function editSong(id) {
+  const s = songs.find(x => x.id === id);
+  editingSongId = id;
+  editorName.value = s.name;
+  editorKeyInput.value = s.key;
+  editorLyrics.value = s.lyrics;
+  songEditor.classList.remove('hidden');
+}
+
+function saveSongEdits() {
+  const s = songs.find(x => x.id === editingSongId);
+  s.name = editorName.value;
+  s.key = editorKeyInput.value;
+  s.lyrics = editorLyrics.value;
+  saveSongs();
+  renderSongs();
+  closeSongEditor();
+  showToast('Cambios guardados', 'success');
+}
+
+function closeSongEditor() {
+  songEditor.classList.add('hidden');
+  editingSongId = null;
+}
+
 // SETLIST
-// ===============================
+function addToSetlist(id) {
+  const song = songs.find(s => s.id === id);
+  if (currentSetlist.includes(song)) return;
+  currentSetlist.push(song);
+  renderSetlist();
+}
+
 function renderSetlist() {
   setlist.innerHTML = '';
   currentSetlist.forEach((s, i) => {
@@ -115,103 +156,26 @@ function renderSetlist() {
   });
 }
 
-// ===============================
-// HISTORIAL
-// ===============================
-function renderHistory() {
-  historyList.innerHTML = '';
-  history.forEach((h, i) => {
-    historyList.innerHTML += `
-      <li>
-        <strong>${h.date}</strong><br>
-        <small>${h.songs.map(s => s.name).join(', ')}</small><br>
-        <button onclick="loadHistory(${i})">↩</button>
-        <button onclick="deleteHistoryItem(${i})">🗑</button>
-      </li>`;
-  });
-}
-
-// ===============================
-// SONGS
-// ===============================
-function addSong() {
-  const name = songNameInput.value.trim();
-  const key = songKeyInput.value.trim();
-  if (!name || !key) return alert('Completá los campos');
-
-  if (songs.some(s => s.name.toLowerCase() === name.toLowerCase()))
-    return alert('La canción ya existe');
-
-  songs.push({ id: crypto.randomUUID(), name, key, lyrics: '' });
-  saveSongs();
-  renderSongs();
-  songNameInput.value = songKeyInput.value = '';
-}
-
-function deleteSongById(id) {
-  songs = songs.filter(s => s.id !== id);
-  saveSongs();
-  renderSongs();
-}
-
-// ===============================
-// EDITAR
-// ===============================
-function editSongById(id) {
-  const song = songs.find(s => s.id === id);
-  editingSongId = id;
-  editorName.value = song.name;
-  editorKeyInput.value = song.key;
-  editorLyrics.value = song.lyrics || '';
-  songEditor.classList.remove('hidden');
-}
-
-function saveSongEdits() {
-  const song = songs.find(s => s.id === editingSongId);
-  song.name = editorName.value.trim();
-  song.key = editorKeyInput.value.trim();
-  song.lyrics = editorLyrics.value;
-  saveSongs();
-  renderSongs();
-  closeSongEditor();
-}
-
-function closeSongEditor() {
-  songEditor.classList.add('hidden');
-  editingSongId = null;
-}
-
-// ===============================
-// SETLIST OPS
-// ===============================
-function addToSetlistById(id) {
-  if (currentSetlist.some(s => s.id === id)) return;
-  currentSetlist.push(songs.find(s => s.id === id));
-  renderSetlist();
-}
-
-const moveUp = i => {
-  if (!i) return;
+function moveUp(i) {
+  if (i === 0) return;
   [currentSetlist[i - 1], currentSetlist[i]] =
-    [currentSetlist[i], currentSetlist[i - 1]];
+  [currentSetlist[i], currentSetlist[i - 1]];
   renderSetlist();
-};
+}
 
-const moveDown = i => {
+function moveDown(i) {
   if (i === currentSetlist.length - 1) return;
   [currentSetlist[i + 1], currentSetlist[i]] =
-    [currentSetlist[i], currentSetlist[i + 1]];
+  [currentSetlist[i], currentSetlist[i + 1]];
   renderSetlist();
-};
+}
 
-const removeFromSetlist = i => {
+function removeFromSetlist(i) {
   currentSetlist.splice(i, 1);
   renderSetlist();
-};
+}
 
-// ===============================
-// GUARDAR SETLIST
-// ===============================
+// HISTORIAL
 function saveSetlist() {
   if (!currentSetlist.length) return;
   history.push({ date: setlistDateInput.value, songs: [...currentSetlist] });
@@ -219,46 +183,39 @@ function saveSetlist() {
   currentSetlist = [];
   renderSetlist();
   renderHistory();
+  showToast('Setlist guardado', 'success');
 }
 
-// ===============================
-// HISTORIAL OPS
-// ===============================
+function renderHistory() {
+  historyList.innerHTML = '';
+  history.forEach((h, i) => {
+    historyList.innerHTML += `
+      <li>
+        <div>
+          <strong>${h.date}</strong><br>
+          <small>${h.songs.map(s => s.name).join(', ')}</small>
+        </div>
+        <div>
+          <button onclick="loadHistory(${i})">↩</button>
+          <button onclick="deleteHistory(${i})">🗑</button>
+        </div>
+      </li>`;
+  });
+}
+
 function loadHistory(i) {
   currentSetlist = [...history[i].songs];
   renderSetlist();
+  showToast('Setlist cargado', 'info');
 }
 
-function deleteHistoryItem(i) {
-  if (!confirm('¿Borrar este setlist?')) return;
+function deleteHistory(i) {
   history.splice(i, 1);
   saveHistory();
   renderHistory();
 }
 
-// ===============================
-// COPIAR
-// ===============================
-function copySetlist() {
-  if (!currentSetlist.length) return;
-  const text = currentSetlist
-    .map((s, i) => `${i + 1}. ${s.name} (${s.key})`)
-    .join('\n');
-  navigator.clipboard.writeText(text);
-  alert('Setlist copiado');
-}
-
-function copySetlistWhatsApp() {
-  if (!currentSetlist.length) return;
-  const text = currentSetlist
-    .map((s, i) => `${i + 1}. ${s.name} (${s.key})`)
-    .join('\n');
-  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`);
-}
-
-// ===============================
 // MODO CANTO
-// ===============================
 function enterStageMode() {
   if (!currentSetlist.length) return;
   stageMode.classList.remove('hidden');
@@ -287,4 +244,51 @@ function openLyrics(song) {
 function backToStage() {
   lyricsView.classList.add('hidden');
   stageMode.classList.remove('hidden');
+}
+
+/* ✅ COPIAR */
+function copySetlist() {
+  if (!currentSetlist.length) {
+    showToast('El setlist está vacío', 'error');
+    return;
+  }
+
+  const text = currentSetlist
+    .map((s, i) => `${i + 1}. ${s.name} (${s.key})`)
+    .join('\n');
+
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text)
+      .then(() => showToast('Setlist copiado', 'success'))
+      .catch(() => fallbackCopy(text));
+  } else {
+    fallbackCopy(text);
+  }
+}
+
+function fallbackCopy(text) {
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.style.position = 'fixed';
+  textarea.style.opacity = '0';
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+  document.execCommand('copy');
+  document.body.removeChild(textarea);
+  showToast('Setlist copiado', 'success');
+}
+
+/* ✅ WHATSAPP */
+function copySetlistWhatsApp() {
+  if (!currentSetlist.length) {
+    showToast('El setlist está vacío', 'error');
+    return;
+  }
+
+  const text = currentSetlist
+    .map((s, i) => `${i + 1}. ${s.name} (${s.key})`)
+    .join('\n');
+
+  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
 }
