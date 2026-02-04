@@ -1,22 +1,39 @@
-{
-  "name": "Gestor de Canciones",
-  "short_name": "Gestor",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#0f1115",
-  "theme_color": "#4f8cff",
-  "orientation": "portrait",
-  "scope": "/",
-  "icons": [
-    {
-      "src": "icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
-  ]
-}
+const CACHE_NAME = 'gestor-canciones-v1';
+const URLS_TO_CACHE = [
+  '/',
+  '/index.html',
+  '/styles.css',
+  '/app.js',
+  '/manifest.json'
+];
+
+// INSTALACIÓN
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache => {
+      return cache.addAll(URLS_TO_CACHE);
+    })
+  );
+  self.skipWaiting();
+});
+
+// ACTIVACIÓN
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(
+        keys.map(key => key !== CACHE_NAME && caches.delete(key))
+      )
+    )
+  );
+  self.clients.claim();
+});
+
+// FETCH (OFFLINE)
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    caches.match(event.request).then(response => {
+      return response || fetch(event.request);
+    })
+  );
+});
