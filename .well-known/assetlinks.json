@@ -1,0 +1,12 @@
+﻿[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.netlify.classy_pavlova_a1f507.twa",
+      "sha256_cert_fingerprints": [
+        "87:DC:74:E7:95:BD:4A:1B:F8:E9:42:1A:89:D0:64:58:CC:6E:09:19:9F:E5:4C:0A:83:73:64:32:F0:51:E2:8D"
+      ]
+    }
+  }
+]
